@@ -8,7 +8,7 @@ Not really important - I guess check "Contributors" if this matters to you
 
 # What
 
-An application implemented in PYQT5 for configuring LewanSoul LX-16A bus servos through USB.
+A very simple application implemented in PYQT5 for configuring LewanSoul LX-16A bus servos through USB.
 
 Hopefully in a cross-platform way (I have no way to test on Windows), allows anyone with Python and PYQT5 to:
 
@@ -24,7 +24,7 @@ Hopefully in a cross-platform way (I have no way to test on Windows), allows any
 
 # Requirements
 
-These are the commands I ran to install things I needed to make this thing work.
+These are the commands I ran to install things I needed to make it work.
 
 Already had python3.5 and pip installed.
 
@@ -41,9 +41,9 @@ The download on LewanSoul's website to configure my new servos doesn't play well
 Not finding a linux version in my searches, at least nothing standalone, and I'll need to write most of what this program will do into my REAL project anyway, so why not build a PYQT5 version to share?
 Also, I hope that putting this code out will help someone else if they want to create their own Python script for working with these servos through USB.
 
-Looking back, this wasn't really that hard.  There were some minor gotcha's, like double checking the command packet length, and re-reading the docs until the minor pice I missed popped out (I got the checksum calculation in particular wrong through several attempts).
+Looking back, this wasn't really that hard.  There were some minor gotcha's, like double checking the command packet length, and re-reading the docs until the minor piece I missed popped out (I got the checksum calculation wrong through several attempts).
 
-Worthy of note: if you send a bad command down the bus, absolutely nothing happens, which can give the impression that you serial port is not configured correctly.  This doesn't require anything fancy, I used 115200 buad rate with a 100ms timeout - all the other settings are whatever the default is.
+Worthy of note: if you send a bad command down the bus, absolutely nothing happens, which can give the impression that your serial port is not configured correctly.  If you're getting nothing back, there is probably something wrong with the command - this doesn't require anything fancy, I used 115200 buad rate with a 100ms timeout - all the other settings are whatever the default is.
 
 
 # Status
