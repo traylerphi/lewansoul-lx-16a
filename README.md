@@ -43,14 +43,14 @@ Also, I hope that putting this code out will help someone else if they want to c
 
 Looking back, this wasn't really that hard.  There were some minor gotcha's, like double checking the command packet length, and re-reading the docs until the minor piece I missed popped out (I got the checksum calculation wrong through several attempts).
 
-Worthy of note: if you send a bad command down the bus, absolutely nothing happens, which can give the impression that your serial port is not configured correctly.  If you're getting nothing back, there is probably something wrong with the command - this doesn't require anything fancy, I used 115200 buad rate with a 100ms timeout - all the other settings are whatever the default is.
+Worthy of note: if you send a bad command down the bus, absolutely nothing happens, which can give the impression that your serial port is not configured correctly.  If you're getting nothing back, there is probably something wrong with the command - this doesn't require anything fancy, I used 115200 buad rate with a 100ms timeout - all the other settings are whatever the defaults are (for those not using Python - it's 115200 8N1)
 
 
 # Status
 
 As of August 7th, 2018, almost all commands in the documentation are implemented.
 
-The code's a little ugly, I'm not gonna front.  Could use a little clean up.  This is my first PYQT5 project, and I went for path of easiest results. At the end of the day, this is a setup tool for another project and that really matters is that it does it's job. I imagine breaking the read/writes to the servo bus into a separate class, maybe framework the UI elements a little.
+The code's a little ugly, I'm not gonna front.  Could use a little clean up.  This is my first PYQT5 project, and I went for path of easiest results. At the end of the day, this is a setup tool for another project and what really matters is that it does it's job. I imagine breaking the read/writes to the servo bus into a separate class, maybe framework the UI elements a little.
 
 Missing:
 * Timing of Servo Position movements (this is intended as a setup tool, no real desire for this at the moment)
