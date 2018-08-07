@@ -13,6 +13,19 @@ Will include some control features for positioning servos, but that's not it's r
 
 The goal is servo setup.
 
+# Requirements
+
+These are the commands I ran to install things I needed to make this thing work.
+
+Already had python3.5 and pip installed.
+
+There is a bug in PYQT5 version 5.11 that throws exceptions on my system. YMMV
+
+Apologies this isn't more helpful - good luck :)
+
+* sudo -H pip3 install "pyqt5<5.11"
+* sudo -H pip3 install pyserial
+
 # When
 
 Soonish?
