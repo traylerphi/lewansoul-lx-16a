@@ -80,63 +80,78 @@ class BusServoTerminal(QWidget):
         self.toggleLightOn.clicked[bool].connect(self.toggle_light_state)
         grid.addWidget(self.toggleLightOn,4,5,1,2)
         
+        lblMode = QLabel('Mode:',self)
+        self.toggleMode = QPushButton('Servo')
+        self.toggleMode.setCheckable(True)
+        self.toggleMode.clicked[bool].connect(self.toggle_mode)
+        grid.addWidget(lblMode,5,3)
+        grid.addWidget(self.toggleMode,5,4)
+        
+        lblSpeed = QLabel('Continuous Speed:',self)
+        self.textSpeed = QLineEdit(self)
+        btnSetSpeed = QPushButton('Set')
+        btnSetSpeed.clicked[bool].connect(self.set_speed)
+        grid.addWidget(lblSpeed,6,3)
+        grid.addWidget(self.textSpeed,6,5)
+        grid.addWidget(btnSetSpeed,6,6)
+        
         lblPosition = QLabel('Position:',self)
         self.textPosition = QLabel(self)
         self.textPosCommand = QLineEdit(self)
         btnPosCommand = QPushButton('Command')
         btnPosCommand.clicked.connect(self.command_position)
-        grid.addWidget(lblPosition,5,3)
-        grid.addWidget(self.textPosition,5,4)
-        grid.addWidget(self.textPosCommand,5,5)
-        grid.addWidget(btnPosCommand,5,6)
+        grid.addWidget(lblPosition,7,3)
+        grid.addWidget(self.textPosition,7,4)
+        grid.addWidget(self.textPosCommand,7,5)
+        grid.addWidget(btnPosCommand,7,6)
         
         lblPosRange = QLabel('Pos Range:',self)
         self.textPosRangeLow = QLineEdit(self)
         self.textPosRangeHigh = QLineEdit(self)
         btnPosRange = QPushButton('Set')
         btnPosRange.clicked.connect(self.set_position_range)
-        grid.addWidget(lblPosRange,6,3)
-        grid.addWidget(self.textPosRangeLow,6,4)
-        grid.addWidget(self.textPosRangeHigh,6,5)
-        grid.addWidget(btnPosRange,6,6)
+        grid.addWidget(lblPosRange,8,3)
+        grid.addWidget(self.textPosRangeLow,8,4)
+        grid.addWidget(self.textPosRangeHigh,8,5)
+        grid.addWidget(btnPosRange,8,6)
         
         lblPosOffset = QLabel('Pos Offset:',self)
         lblPosOffset2 = QLabel('(-125 ~ 125)',self)
         self.textPosOffset = QLineEdit(self)
         btnPosOffset = QPushButton('Set')
         btnPosOffset.clicked.connect(self.set_pos_offset)
-        grid.addWidget(lblPosOffset,7,3)
-        grid.addWidget(self.textPosOffset,7,4)
-        grid.addWidget(lblPosOffset2,7,5)
-        grid.addWidget(btnPosOffset,7,6)
+        grid.addWidget(lblPosOffset,9,3)
+        grid.addWidget(self.textPosOffset,9,4)
+        grid.addWidget(lblPosOffset2,9,5)
+        grid.addWidget(btnPosOffset,9,6)
 
         lblTemperature = QLabel('Temperature:',self)
         self.textTemperature = QLabel(self)
-        grid.addWidget(lblTemperature,8,3)
-        grid.addWidget(self.textTemperature,8,4,1,3)
+        grid.addWidget(lblTemperature,10,3)
+        grid.addWidget(self.textTemperature,10,4,1,3)
         
         lblMaxTemp = QLabel('Max Temp:',self)
         self.textMaxTemp = QLineEdit(self)
         btnMaxTemp = QPushButton('Set')
         btnMaxTemp.clicked.connect(self.set_max_temp)
-        grid.addWidget(lblMaxTemp,9,3)
-        grid.addWidget(self.textMaxTemp,9,4,1,2)
-        grid.addWidget(btnMaxTemp,9,6)
+        grid.addWidget(lblMaxTemp,11,3)
+        grid.addWidget(self.textMaxTemp,11,4,1,2)
+        grid.addWidget(btnMaxTemp,11,6)
         
         lblVoltage = QLabel('Voltage:',self)
         self.textVoltage = QLabel(self)
-        grid.addWidget(lblVoltage,10,3)
-        grid.addWidget(self.textVoltage,10,4,1,3)
+        grid.addWidget(lblVoltage,12,3)
+        grid.addWidget(self.textVoltage,12,4,1,3)
         
         lblVoltRange = QLabel('Voltage Range:',self)
         self.textVoltRangeLow = QLineEdit(self)
         self.textVoltRangeHigh = QLineEdit(self)
         btnVoltRange = QPushButton('Set')
         btnVoltRange.clicked.connect(self.set_voltage_range)
-        grid.addWidget(lblVoltRange,11,3)
-        grid.addWidget(self.textVoltRangeLow,11,4)
-        grid.addWidget(self.textVoltRangeHigh,11,5)
-        grid.addWidget(btnVoltRange,11,6)
+        grid.addWidget(lblVoltRange,13,3)
+        grid.addWidget(self.textVoltRangeLow,13,4)
+        grid.addWidget(self.textVoltRangeHigh,13,5)
+        grid.addWidget(btnVoltRange,13,6)
         
         lblAlarm1 = QLabel('Temperature Alarm',self)
         lblAlarm2 = QLabel('Voltage Alarm',self)
@@ -150,12 +165,12 @@ class BusServoTerminal(QWidget):
         self.toggleAlarmEnable1.clicked[bool].connect(self.update_alarm_config)
         self.toggleAlarmEnable2.clicked[bool].connect(self.update_alarm_config)
         self.toggleAlarmEnable4.clicked[bool].connect(self.update_alarm_config)
-        grid.addWidget(lblAlarm1,12,3)
-        grid.addWidget(self.toggleAlarmEnable1,12,4)
-        grid.addWidget(lblAlarm2,13,3)
-        grid.addWidget(self.toggleAlarmEnable2,13,4)
-        grid.addWidget(lblAlarm4,14,3)
-        grid.addWidget(self.toggleAlarmEnable4,14,4)
+        grid.addWidget(lblAlarm1,14,3)
+        grid.addWidget(self.toggleAlarmEnable1,14,4)
+        grid.addWidget(lblAlarm2,15,3)
+        grid.addWidget(self.toggleAlarmEnable2,15,4)
+        grid.addWidget(lblAlarm4,16,3)
+        grid.addWidget(self.toggleAlarmEnable4,16,4)
         
         """
         Initilize the window itself, center in the screen with default size 800x300
@@ -250,6 +265,7 @@ class BusServoTerminal(QWidget):
         self.textServoID.setText('')
         self.update_motor_state_button()
         self.update_light_state_button()
+        self.update_mode_button()
         self.textPosition.setText('')
         self.textPosCommand.setText('')
         self.textPosRangeLow.setText('')
@@ -271,6 +287,7 @@ class BusServoTerminal(QWidget):
             self.textServoID.setText(str(id))
             self.update_motor_state_button()
             self.update_light_state_button()
+            self.update_mode_button()
             self.textPosition.setText(str(self.read_position()))
             self.textPosCommand.setText(self.textPosition.text())
             self.textPosRangeLow.setText(str(self.read_position_range()[0]))
@@ -377,7 +394,7 @@ class BusServoTerminal(QWidget):
         if self.selected_servo_id != False:
             command = self.prepareCommand([self.selected_servo_id,3,19])
             self.connection.write(command)
-            response = bytearray([0]*8)
+            response = bytearray([0]*7)
             count = self.connection.readinto(response)
             offset = response[5]
             if offset > 125:
@@ -392,8 +409,12 @@ class BusServoTerminal(QWidget):
                 offset = 256 + offset
             command = self.prepareCommand([self.selected_servo_id,4,17,offset])
             self.connection.write(command)
+            response = bytearray([0]*7)
+            count = self.connection.readinto(response)
             command = self.prepareCommand([self.selected_servo_id,3,18])
             self.connection.write(command)
+            response = bytearray([0]*7)
+            count = self.connection.readinto(response)
 
     def read_temperature(self):
         if self.selected_servo_id != False:
@@ -423,9 +444,9 @@ class BusServoTerminal(QWidget):
             newvalue = int(self.textMaxTemp.text())
             sys.stderr.write('--- Setting Max Temp of {!r} to {!r}\n'.format(self.selected_servo_id,newvalue))
             command = self.prepareCommand([self.selected_servo_id,4,24,newvalue])
+            self.connection.write(command)
             response = bytearray([0]*7)
             count = self.connection.readinto(response)
-            self.connection.write(command)
     
     def read_voltage(self):
         if self.selected_servo_id != False:
@@ -461,9 +482,9 @@ class BusServoTerminal(QWidget):
                 high_high = high_high + 1
             
             command = self.prepareCommand([self.selected_servo_id,7,22,low_low,low_high,high_low,high_high])
+            self.connection.write(command)
             response = bytearray([0]*7)
             count = self.connection.readinto(response)
-            self.connection.write(command)
     
     def update_motor_state_button(self):
         if self.read_motor_state():
@@ -479,7 +500,7 @@ class BusServoTerminal(QWidget):
             self.connection.write(command)
             response = bytearray([0]*7)
             count = self.connection.readinto(response)
-            if response[5] != 0:
+            if response[5] == 1:
                 return True
         return False
     
@@ -499,6 +520,60 @@ class BusServoTerminal(QWidget):
             
         self.update_motor_state_button()
     
+    def update_mode_button(self):
+        if self.read_mode():
+            self.toggleMode.setText('Continuous')
+            self.toggleMode.setChecked(True)
+        else:
+            self.toggleMode.setText('Servo')
+            self.toggleMode.setChecked(False)
+            self.textSpeed.setText('0')
+    
+    def read_mode(self):
+        if self.selected_servo_id != False:
+            command = self.prepareCommand([self.selected_servo_id,3,30])
+            self.connection.write(command)
+            response = bytearray([0]*7)
+            count = self.connection.readinto(response)
+            if response[5] == 1:
+                return True
+        return False
+    
+    def set_speed(self):
+        if self.selected_servo_id != False:
+            high = 0
+            low = int(self.textSpeed.text())
+            if low < 0:
+                low = 65536 + low
+            while low > 255:
+                low = low - 256
+                high = high + 1
+            command = self.prepareCommand([self.selected_servo_id,7,29,1,0,low,high])
+            self.connection.write(command)
+            response = bytearray([0]*7)
+            count = self.connection.readinto(response)
+            self.toggleMode.setText('Continuous')
+            self.toggleMode.setChecked(True)
+    
+    def toggle_mode(self, pressed):
+        if self.selected_servo_id == False:
+            pressed = False
+        if pressed:
+            value = 1
+        else:
+            value = 0
+            
+        if self.selected_servo_id != False:
+            if value == 0:
+                command = self.prepareCommand([self.selected_servo_id,7,29,0,0,0,0])
+                self.connection.write(command)
+                response = bytearray([0]*7)
+                count = self.connection.readinto(response)
+            else:
+                self.set_speed()
+            
+        self.update_mode_button()
+        
     def update_light_state_button(self):
         if self.read_light_state():
             self.toggleLightOn.setText('LED On')
