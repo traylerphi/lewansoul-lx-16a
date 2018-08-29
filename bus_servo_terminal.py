@@ -100,6 +100,16 @@ class BusServoTerminal(QWidget):
         grid.addWidget(self.textPosRangeHigh,6,5)
         grid.addWidget(btnPosRange,6,6)
         
+        lblPosOffset = QLabel('Pos Offset:',self)
+        lblPosOffset2 = QLabel('(-125 ~ 125)',self)
+        self.textPosOffset = QLineEdit(self)
+        btnPosOffset = QPushButton('Set')
+        btnPosOffset.clicked.connect(self.set_pos_offset)
+        grid.addWidget(lblPosOffset,7,3)
+        grid.addWidget(self.textPosOffset,7,4)
+        grid.addWidget(lblPosOffset2,7,5)
+        grid.addWidget(btnPosOffset,7,6)
+
         lblTemperature = QLabel('Temperature:',self)
         self.textTemperature = QLabel(self)
         grid.addWidget(lblTemperature,8,3)
@@ -244,6 +254,7 @@ class BusServoTerminal(QWidget):
         self.textPosCommand.setText('')
         self.textPosRangeLow.setText('')
         self.textPosRangeHigh.setText('')
+        self.textPosOffset.setText('')
         self.textTemperature.setText('')
         self.textMaxTemp.setText('')
         self.textVoltage.setText('')
@@ -264,6 +275,7 @@ class BusServoTerminal(QWidget):
             self.textPosCommand.setText(self.textPosition.text())
             self.textPosRangeLow.setText(str(self.read_position_range()[0]))
             self.textPosRangeHigh.setText(str(self.read_position_range()[1]))
+            self.textPosOffset.setText(str(self.read_position_offset()))
             self.textTemperature.setText(str(self.read_temperature()))
             self.textMaxTemp.setText(str(self.read_max_temp()))
             self.textVoltage.setText(str(self.read_voltage()))
@@ -360,7 +372,29 @@ class BusServoTerminal(QWidget):
             response = bytearray([0]*7)
             count = self.connection.readinto(response)
             self.connection.write(command)
-            
+
+    def read_position_offset(self):
+        if self.selected_servo_id != False:
+            command = self.prepareCommand([self.selected_servo_id,3,19])
+            self.connection.write(command)
+            response = bytearray([0]*8)
+            count = self.connection.readinto(response)
+            offset = response[5]
+            if offset > 125:
+                offset = offset - 256
+            return offset
+        return ''
+
+    def set_pos_offset(self):
+        if self.selected_servo_id != False:
+            offset = int(self.textPosOffset.text())
+            if offset < 0:
+                offset = 256 + offset
+            command = self.prepareCommand([self.selected_servo_id,4,17,offset])
+            self.connection.write(command)
+            command = self.prepareCommand([self.selected_servo_id,3,18])
+            self.connection.write(command)
+
     def read_temperature(self):
         if self.selected_servo_id != False:
             command = self.prepareCommand([self.selected_servo_id,3,26])
