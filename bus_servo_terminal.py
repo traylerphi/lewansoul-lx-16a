@@ -172,6 +172,9 @@ class BusServoTerminal(QWidget):
             if (port.vid == 6790) and (port.pid == 29987):
                 self.selected_port = port
                 sys.stderr.write('* Auto-selecting port {!r}\n'.format(port.device))
+        if self.selected_port == False:
+            sys.stderr.write('No device found, is Lewan Debug board connected?\n')
+            sys.exit()
         sys.stderr.flush()
     
     def connectToPort(self):
