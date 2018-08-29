@@ -166,13 +166,15 @@ class BusServoTerminal(QWidget):
         """
         self.available_ports.clear()
         
+        not_found = True
         for port in sorted(comports()):
             self.available_ports.append(port)
             sys.stderr.write('Found port {!r}\n'.format(port.device))
             if (port.vid == 6790) and (port.pid == 29987):
                 self.selected_port = port
+                not_found = False
                 sys.stderr.write('* Auto-selecting port {!r}\n'.format(port.device))
-        if self.selected_port == False:
+        if not_found == True:
             sys.stderr.write('No device found, is Lewan Debug board connected?\n')
             sys.exit()
         sys.stderr.flush()
@@ -542,8 +544,9 @@ class BusServoTerminal(QWidget):
         """
         Application closing
         """
-        sys.stderr.write('--- Closing connection to {!r}\n'.format(self.connection.name))
-        self.connection.close()
+        if self.connection:
+            sys.stderr.write('--- Closing connection to {!r}\n'.format(self.connection.name))
+            self.connection.close()
         event.accept()
 
 
