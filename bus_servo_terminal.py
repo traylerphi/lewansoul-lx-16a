@@ -55,7 +55,7 @@ class BusServoTerminal(QWidget):
         
         self.servolist = QListWidget(self)
         self.servolist.itemClicked.connect(self.select_servo)
-        grid.addWidget(self.servolist, 2, 0, 13, 2)
+        grid.addWidget(self.servolist, 2, 0, 15, 2)
         
         
         self.lblStatus = QLabel('No Selection')
@@ -73,25 +73,27 @@ class BusServoTerminal(QWidget):
         self.toggleMotorOn = QPushButton('Motor Off')
         self.toggleMotorOn.setCheckable(True)
         self.toggleMotorOn.clicked[bool].connect(self.toggle_motor_state)
-        grid.addWidget(self.toggleMotorOn,4,3,1,2)
+        grid.addWidget(self.toggleMotorOn,4,4)
         
         self.toggleLightOn = QPushButton('LED Off')
         self.toggleLightOn.setCheckable(True)
         self.toggleLightOn.clicked[bool].connect(self.toggle_light_state)
-        grid.addWidget(self.toggleLightOn,4,5,1,2)
+        grid.addWidget(self.toggleLightOn,4,5)
         
-        lblMode = QLabel('Mode:',self)
+        lblMode = QLabel('Control:',self)
         self.toggleMode = QPushButton('Servo')
         self.toggleMode.setCheckable(True)
         self.toggleMode.clicked[bool].connect(self.toggle_mode)
-        grid.addWidget(lblMode,5,3)
+        grid.addWidget(lblMode,4,3)
         grid.addWidget(self.toggleMode,5,4)
         
         lblSpeed = QLabel('Continuous Speed:',self)
+        lblSpeed2 = QLabel('(-1000 ~ 1000)',self)
         self.textSpeed = QLineEdit(self)
         btnSetSpeed = QPushButton('Set')
         btnSetSpeed.clicked[bool].connect(self.set_speed)
         grid.addWidget(lblSpeed,6,3)
+        grid.addWidget(lblSpeed2,6,4)
         grid.addWidget(self.textSpeed,6,5)
         grid.addWidget(btnSetSpeed,6,6)
         
@@ -121,8 +123,8 @@ class BusServoTerminal(QWidget):
         btnPosOffset = QPushButton('Set')
         btnPosOffset.clicked.connect(self.set_pos_offset)
         grid.addWidget(lblPosOffset,9,3)
-        grid.addWidget(self.textPosOffset,9,4)
-        grid.addWidget(lblPosOffset2,9,5)
+        grid.addWidget(lblPosOffset2,9,4)
+        grid.addWidget(self.textPosOffset,9,5)
         grid.addWidget(btnPosOffset,9,6)
 
         lblTemperature = QLabel('Temperature:',self)
@@ -246,8 +248,8 @@ class BusServoTerminal(QWidget):
         
         self.lblStatus.setText("No Selection")
         sys.stderr.flush()
-    
-    def prepareCommand(self, command):
+        
+    def sendCommand(self, command):
         """
         Add packet headers and checksum
         """
@@ -257,7 +259,25 @@ class BusServoTerminal(QWidget):
         if sum > 255:
             sum = sum & 255
         sum = 255 - sum
-        return bytearray([85,85,*command,sum])
+        
+        prepared = [85,85,*command,sum]
+        
+        self.connection.flushInput()
+        self.connection.flushOutput()
+        self.connection.write(prepared)
+        result = []
+        response = bytearray([0]*10)
+        count = self.connection.readinto(response)
+        found_header = 0
+        for i in range(count):
+            if found_header == 2:
+                result.append(response[i])
+            if response[i] == 85:
+                found_header = found_header + 1
+            if found_header == 3:
+                found_header = 1
+        #print(result)
+        return result
     
     def clear_selected_servo(self):
         self.lblStatus.setText('No Selection')
@@ -280,6 +300,12 @@ class BusServoTerminal(QWidget):
     
     def select_servo(self, item):
         id = int(re.search('Servo ID:(\d+)',item.text()).group(1));
+        self.clear_selected_servo();
+        self.lblStatus.setText("Loading Servo ID:{!r}...".format(id))
+        QApplication.instance().processEvents() # Force update
+        QApplication.instance().processEvents() # so user knows
+        QApplication.instance().processEvents() # something
+        QApplication.instance().processEvents() # is happening
         self.clear_selected_servo()
         if self.checkForID(id):
             self.lblStatus.setText("Selected Servo ID:{!r}".format(id))
@@ -290,14 +316,16 @@ class BusServoTerminal(QWidget):
             self.update_mode_button()
             self.textPosition.setText(str(self.read_position()))
             self.textPosCommand.setText(self.textPosition.text())
-            self.textPosRangeLow.setText(str(self.read_position_range()[0]))
-            self.textPosRangeHigh.setText(str(self.read_position_range()[1]))
+            position_range = self.read_position_range()
+            self.textPosRangeLow.setText(str(position_range[0]))
+            self.textPosRangeHigh.setText(str(position_range[1]))
             self.textPosOffset.setText(str(self.read_position_offset()))
             self.textTemperature.setText(str(self.read_temperature()))
             self.textMaxTemp.setText(str(self.read_max_temp()))
             self.textVoltage.setText(str(self.read_voltage()))
-            self.textVoltRangeLow.setText(str(self.read_voltage_range()[0]))
-            self.textVoltRangeHigh.setText(str(self.read_voltage_range()[1]))
+            voltage_range = self.read_voltage_range()
+            self.textVoltRangeLow.setText(str(voltage_range[0]))
+            self.textVoltRangeHigh.setText(str(voltage_range[1]))
             self.update_alarm_enable_buttons()
         else:
             # Bad selection - re poll
@@ -308,20 +336,13 @@ class BusServoTerminal(QWidget):
         Send command 14 (READ ID, length 3) to id
         
         Return True if valid response
-        Return 'Multple' if garbled response
-        Return False if no response
+        Return False otherwise
         """
-        command = self.prepareCommand([id,3,14])
-        self.connection.write(command)
-        response = bytearray([0]*7)
-        count = self.connection.readinto(response)
-        if count > 0:
-            if response[0] == 85 and response[1] == 85 and response[2] == id:
-                return True
-            else:
-                return 'Multiple'
-            self.connection.flushInput()
-            self.connection.flushOutput()
+        result = self.sendCommand([id,3,14])
+        if result == []:
+            return False
+        if result[0] == id:
+            return True
         return False
     
     def set_servo_id(self):
@@ -329,19 +350,13 @@ class BusServoTerminal(QWidget):
             self.lblStatus.setText("Setting ID...")
             newid = int(self.textServoID.text())
             sys.stderr.write('--- Setting ID of {!r} to {!r}\n'.format(self.selected_servo_id,newid))
-            command = self.prepareCommand([self.selected_servo_id,4,13,newid])
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
-            self.connection.write(command)
+            result = self.sendCommand([self.selected_servo_id,4,13,newid])
             self.pollBus()  
             
     def read_position(self):
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,3,28])
-            self.connection.write(command)
-            response = bytearray([0]*8)
-            count = self.connection.readinto(response)
-            return (int(response[6]*256) + int(response[5]))
+            result = self.sendCommand([self.selected_servo_id,3,28])
+            return (int(result[4]*256) + int(result[3]))
         return ''
     
     def command_position(self):
@@ -353,22 +368,16 @@ class BusServoTerminal(QWidget):
             while low > 255:
                 low = low - 256
                 high = high + 1
-            command = self.prepareCommand([self.selected_servo_id,7,1,low,high,0,0])
-            self.connection.write(command)
-            response = bytearray([0]*10)
-            count = self.connection.readinto(response)
+            self.sendCommand([self.selected_servo_id,7,1,low,high,0,0])
             
         self.update_motor_state_button()
     
     
     def read_position_range(self):
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,3,21])
-            self.connection.write(command)
-            response = bytearray([0]*10)
-            count = self.connection.readinto(response)
-            low = (int(response[6]*256) + int(response[5]))
-            high = (int(response[8]*256) + int(response[7]))
+            result = self.sendCommand([self.selected_servo_id,3,21])
+            low = (int(result[4]*256) + int(result[3]))
+            high = (int(result[6]*256) + int(result[5]))
             return [low,high]
         return ['','']
     
@@ -384,19 +393,12 @@ class BusServoTerminal(QWidget):
             while high_low > 255:
                 high_low = high_low - 256
                 high_high = high_high + 1
-            
-            command = self.prepareCommand([self.selected_servo_id,7,20,low_low,low_high,high_low,high_high])
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
-            self.connection.write(command)
+            self.sendCommand([self.selected_servo_id,7,20,low_low,low_high,high_low,high_high])
 
     def read_position_offset(self):
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,3,19])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
-            offset = response[5]
+            result = self.sendCommand([self.selected_servo_id,3,19])
+            offset = int(result[3])
             if offset > 125:
                 offset = offset - 256
             return offset
@@ -407,64 +409,37 @@ class BusServoTerminal(QWidget):
             offset = int(self.textPosOffset.text())
             if offset < 0:
                 offset = 256 + offset
-            command = self.prepareCommand([self.selected_servo_id,4,17,offset])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
-            command = self.prepareCommand([self.selected_servo_id,3,18])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
+            self.sendCommand([self.selected_servo_id,4,17,offset])
+            self.sendCommand([self.selected_servo_id,3,18])
 
     def read_temperature(self):
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,3,26])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
-            #print(count)
-            #print(response)
-            return response[5]
+            result = self.sendCommand([self.selected_servo_id,3,26])
+            return result[3]
         return ''
     
     def read_max_temp(self):
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,3,25])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
-            #print(count)
-            #print(response)
-            return response[5]
+            result = self.sendCommand([self.selected_servo_id,3,25])
+            return result[3]
         return ''
     
-            
     def set_max_temp(self):
         if self.selected_servo_id != False:
             newvalue = int(self.textMaxTemp.text())
-            sys.stderr.write('--- Setting Max Temp of {!r} to {!r}\n'.format(self.selected_servo_id,newvalue))
-            command = self.prepareCommand([self.selected_servo_id,4,24,newvalue])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
+            self.sendCommand([self.selected_servo_id,4,24,newvalue])
     
     def read_voltage(self):
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,3,27])
-            self.connection.write(command)
-            response = bytearray([0]*8)
-            count = self.connection.readinto(response)
-            return (int(response[6]*256) + int(response[5]))
+            result = self.sendCommand([self.selected_servo_id,3,27])
+            return (int(result[4]*256) + int(result[3]))
         return ''
     
     def read_voltage_range(self):
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,3,23])
-            self.connection.write(command)
-            response = bytearray([0]*10)
-            count = self.connection.readinto(response)
-            low = (int(response[6]*256) + int(response[5]))
-            high = (int(response[8]*256) + int(response[7]))
+            result = self.sendCommand([self.selected_servo_id,3,23])
+            low = (int(result[4]*256) + int(result[3]))
+            high = (int(result[6]*256) + int(result[5]))
             return [low,high]
         return ['','']
     
@@ -481,10 +456,7 @@ class BusServoTerminal(QWidget):
                 high_low = high_low - 256
                 high_high = high_high + 1
             
-            command = self.prepareCommand([self.selected_servo_id,7,22,low_low,low_high,high_low,high_high])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
+            self.sendCommand([self.selected_servo_id,7,22,low_low,low_high,high_low,high_high])
     
     def update_motor_state_button(self):
         if self.read_motor_state():
@@ -496,11 +468,8 @@ class BusServoTerminal(QWidget):
             
     def read_motor_state(self):
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,3,32])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
-            if response[5] == 1:
+            result = self.sendCommand([self.selected_servo_id,3,32])
+            if result[3] == 1:
                 return True
         return False
     
@@ -513,10 +482,7 @@ class BusServoTerminal(QWidget):
             value = 0
             
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,4,31,value])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
+            self.sendCommand([self.selected_servo_id,4,31,value])
             
         self.update_motor_state_button()
     
@@ -531,11 +497,8 @@ class BusServoTerminal(QWidget):
     
     def read_mode(self):
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,3,30])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
-            if response[5] == 1:
+            result = self.sendCommand([self.selected_servo_id,3,30])
+            if result[3] == 1:
                 return True
         return False
     
@@ -548,10 +511,7 @@ class BusServoTerminal(QWidget):
             while low > 255:
                 low = low - 256
                 high = high + 1
-            command = self.prepareCommand([self.selected_servo_id,7,29,1,0,low,high])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
+            self.sendCommand([self.selected_servo_id,7,29,1,0,low,high])
             self.toggleMode.setText('Continuous')
             self.toggleMode.setChecked(True)
     
@@ -565,10 +525,7 @@ class BusServoTerminal(QWidget):
             
         if self.selected_servo_id != False:
             if value == 0:
-                command = self.prepareCommand([self.selected_servo_id,7,29,0,0,0,0])
-                self.connection.write(command)
-                response = bytearray([0]*7)
-                count = self.connection.readinto(response)
+                self.sendCommand([self.selected_servo_id,7,29,0,0,0,0])
             else:
                 self.set_speed()
             
@@ -584,11 +541,8 @@ class BusServoTerminal(QWidget):
             
     def read_light_state(self):
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,3,34])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
-            if response[5] == 0:
+            result = self.sendCommand([self.selected_servo_id,3,34])
+            if result[3] == 0:
                 return True
         return False
     
@@ -601,10 +555,7 @@ class BusServoTerminal(QWidget):
             value = 1
             
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,4,33,value])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
+            self.sendCommand([self.selected_servo_id,4,33,value])
             
         self.update_light_state_button()
     
@@ -617,11 +568,8 @@ class BusServoTerminal(QWidget):
         self.toggleAlarmEnable4.setChecked(False)
         
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,3,36])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
-            config = int(response[5])
+            result = self.sendCommand([self.selected_servo_id,3,36])
+            config = int(result[3])
             if config & 1:
                 self.toggleAlarmEnable1.setText('Enabled')
                 self.toggleAlarmEnable1.setChecked(True)
@@ -642,10 +590,7 @@ class BusServoTerminal(QWidget):
         if self.toggleAlarmEnable4.isChecked():
             config = config + 4
         if self.selected_servo_id != False:
-            command = self.prepareCommand([self.selected_servo_id,4,35,config])
-            self.connection.write(command)
-            response = bytearray([0]*7)
-            count = self.connection.readinto(response)
+            self.sendCommand([self.selected_servo_id,4,35,config])
         self.update_alarm_enable_buttons()
     
     
