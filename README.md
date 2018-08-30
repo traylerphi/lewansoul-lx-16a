@@ -17,7 +17,8 @@ Hopefully in a cross-platform way (I have no way to test on Windows), allows any
 * Set LED Error conditions
 * Toggle Motor Power On/Off
 * Command Servo Position (immediate, fastest move only - the servos have wait-for-signal and move duration capability, not currently implemented here)
-* Set Position Min/Max range
+* Command Continuous Rotation Speed
+* Set Position Min/Max range and Offset Adjustment
 * Set Over-voltage limit value
 * Set Over-temp limit value
 * Read Position, Voltage, Temperature feedback values
@@ -57,6 +58,7 @@ Worthy of note: if you send a bad command down the bus, absolutely nothing happe
 * Added a check to see if the debug baord is even plugged in, to prevent nasty exceptions if not
 * Implemented Angle Offset Adjustments and Servo/Continuous mode
 * As I was adding the new commands, I found I was getting garbage results for everything all of a sudden. Apparently if you don't ctach the response or flush the buffers, all hell breaks lose.  Also, kinda of crappy that every little method was implementing a response parse, so this has been consolidated into a single sendCommand() method which replaces prepareCommand()+send+parse.  This new parsing strips out the header 0x55's, so what was previously response[5] is now result[3].
+* Now _absolutely_ planning to break this into two classes: a standalone class for controlling the bus, and another to implement the GUI
 
 ###### August 7th, 2018
 
