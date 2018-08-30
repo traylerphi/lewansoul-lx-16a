@@ -46,16 +46,19 @@ Looking back, this wasn't really that hard.  There were some minor gotcha's, lik
 
 Worthy of note: if you send a bad command down the bus, absolutely nothing happens, which can give the impression that your serial port is not configured correctly.  If you're getting nothing back, there is probably something wrong with the command - this doesn't require anything fancy, I used 115200 buad rate with a 100ms timeout - all the other settings are whatever the defaults are (for those not using Python - it's 115200 8N1)
 
+# Latest Screenshot
 
-# Status
+![alt text](screenshots/2018-08-29.png)
 
-######August 29th, 2018
+# Updates
+
+###### August 29th, 2018
 
 * Added a check to see if the debug baord is even plugged in, to prevent nasty exceptions if not
 * Implemented Angle Offset Adjustments and Servo/Continuous mode
-* As I was adding the new commands, I found I was getting garbage results for everything all of a sudden. Apparently if you don't ctach the response or flush the buffers, all hell breaks lose.  Also, kinda of crappy that every little method was implementing a response parse, so this has been consolidated into a single sendCommand() method which replaces prepareCommand()+send+parse.  This new parsing strips out the header 0x55's, so what was previously response[5] becomes results[3].
+* As I was adding the new commands, I found I was getting garbage results for everything all of a sudden. Apparently if you don't ctach the response or flush the buffers, all hell breaks lose.  Also, kinda of crappy that every little method was implementing a response parse, so this has been consolidated into a single sendCommand() method which replaces prepareCommand()+send+parse.  This new parsing strips out the header 0x55's, so what was previously response[5] is now result[3].
 
-######August 7th, 2018
+###### August 7th, 2018
 
 Almost all commands in the documentation are implemented.
 
